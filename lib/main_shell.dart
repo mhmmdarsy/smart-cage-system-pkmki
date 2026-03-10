@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'pages/home_page.dart';
 import 'pages/jadwal_page.dart';
 import 'pages/perangkat_page.dart';
+import 'state/petfeed_controller.dart';
 import 'theme/app_colors.dart';
 
 class MainShell extends StatefulWidget {
@@ -13,41 +15,30 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
-  int _currentTab = 0;
-  int _selectedDevice = 0;
-  final List<bool> _scheduleActive = [true, false, false];
-
-  void _goToTab(int index) {
-    setState(() => _currentTab = index);
-  }
-
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<PetFeedController>();
+
     final pages = <Widget>[
       HomePage(
-        scheduleActive: _scheduleActive,
-        onEditJadwalPressed: () => _goToTab(1),
-        onScheduleChanged: (index, value) {
-          setState(() {
-            _scheduleActive[index] = value;
-          });
-        },
+        scheduleActive: controller.scheduleActive,
+        onEditJadwalPressed: () => controller.setTab(1),
+        onScheduleChanged: controller.updateScheduleActive,
+        onFeedNow: controller.triggerFeedNow,
       ),
-      JadwalPage(onBack: () => _goToTab(0)),
+      JadwalPage(onBack: () => controller.setTab(0)),
       PerangkatPage(
-        selectedDevice: _selectedDevice,
-        onBack: () => _goToTab(0),
-        onDeviceChanged: (index) {
-          setState(() => _selectedDevice = index);
-        },
+        selectedDevice: controller.selectedDevice,
+        onBack: () => controller.setTab(0),
+        onDeviceChanged: controller.selectDevice,
       ),
     ];
 
     return Scaffold(
-      body: SafeArea(child: pages[_currentTab]),
+      body: SafeArea(child: pages[controller.currentTab]),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentTab,
-        onTap: _goToTab,
+        currentIndex: controller.currentTab,
+        onTap: controller.setTab,
         selectedItemColor: AppColors.primaryBlue,
         unselectedItemColor: const Color(0xFFB7B7BC),
         items: const [

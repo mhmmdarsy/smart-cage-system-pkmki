@@ -11,11 +11,13 @@ class HomePage extends StatelessWidget {
     required this.scheduleActive,
     required this.onScheduleChanged,
     required this.onEditJadwalPressed,
+    required this.onFeedNow,
   });
 
   final List<bool> scheduleActive;
   final void Function(int index, bool value) onScheduleChanged;
   final VoidCallback onEditJadwalPressed;
+  final Future<void> Function() onFeedNow;
 
   static const _schedules = <ScheduleItem>[
     ScheduleItem(
@@ -62,7 +64,19 @@ class HomePage extends StatelessWidget {
                 ),
                 elevation: 2,
               ),
-              onPressed: () {},
+              onPressed: () async {
+                await onFeedNow();
+                if (!context.mounted) {
+                  return;
+                }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Perintah pakan dikirim (dummy IoT service).',
+                    ),
+                  ),
+                );
+              },
               icon: const Icon(Icons.restaurant, size: 36),
               label: const Text(
                 'Beri Pakan Sekarang',

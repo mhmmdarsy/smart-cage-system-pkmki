@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../state/petfeed_controller.dart';
 import '../theme/app_colors.dart';
 import '../widgets/page_header.dart';
 
@@ -13,10 +15,19 @@ class JadwalPage extends StatefulWidget {
 }
 
 class _JadwalPageState extends State<JadwalPage> {
-  int _hour = 8;
-  int _minute = 0;
-  bool _isActive = true;
   final _namaController = TextEditingController();
+  bool _didInit = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didInit) {
+      return;
+    }
+    final controller = context.read<PetFeedController>();
+    _namaController.text = controller.editName;
+    _didInit = true;
+  }
 
   @override
   void dispose() {
@@ -26,6 +37,8 @@ class _JadwalPageState extends State<JadwalPage> {
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<PetFeedController>();
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
@@ -52,10 +65,8 @@ class _JadwalPageState extends State<JadwalPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _timePickerBox(
-                value: _hour.toString().padLeft(2, '0'),
-                onPressed: () {
-                  setState(() => _hour = (_hour + 1) % 24);
-                },
+                value: controller.editHour.toString().padLeft(2, '0'),
+                onPressed: controller.incrementHour,
               ),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 12),
@@ -65,10 +76,8 @@ class _JadwalPageState extends State<JadwalPage> {
                 ),
               ),
               _timePickerBox(
-                value: _minute.toString().padLeft(2, '0'),
-                onPressed: () {
-                  setState(() => _minute = (_minute + 5) % 60);
-                },
+                value: controller.editMinute.toString().padLeft(2, '0'),
+                onPressed: controller.incrementMinute,
               ),
             ],
           ),
@@ -91,6 +100,7 @@ class _JadwalPageState extends State<JadwalPage> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: _namaController,
+                  onChanged: controller.setEditName,
                   decoration: InputDecoration(
                     hintText: 'Isi disini . . .',
                     hintStyle: const TextStyle(
@@ -117,9 +127,9 @@ class _JadwalPageState extends State<JadwalPage> {
                       ),
                     ),
                     Switch(
-                      value: _isActive,
+                      value: controller.editActive,
                       activeColor: AppColors.primaryBlue,
-                      onChanged: (value) => setState(() => _isActive = value),
+                      onChanged: controller.setEditActive,
                     ),
                   ],
                 ),
@@ -138,13 +148,20 @@ class _JadwalPageState extends State<JadwalPage> {
                   borderRadius: BorderRadius.circular(22),
                 ),
               ),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Jadwal disimpan (dummy frontend).'),
-                  ),
-                );
-              },
+              onPressed:
+                  controller.isSaving
+                      ? null
+                      : () async {
+                        await controller.saveSchedule();
+                        if (!context.mounted) {
+                          return;
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Jadwal disimpan (dummy frontend).'),
+                          ),
+                        );
+                      },
               icon: const Icon(Icons.check, size: 40),
               label: const Text(
                 'Simpan',
