@@ -7,7 +7,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:smart_cage_system_pkmki/main.dart';
+import 'package:smart_cage_system_pkmki/app.dart';
 
 void main() {
   testWidgets('PetFeed home screen smoke test', (WidgetTester tester) async {
